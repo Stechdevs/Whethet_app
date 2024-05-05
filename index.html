@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<meta name="Author" content='sadiq Abubakar' >
+	<meta name="description" content='whether app that fetches whether data from api base on the entered city'>
+	<link rel="shortcut icon" type="image/x-icon" href="favicon.ico">
+	<link rel="manifest" href="/manifest.json">
+	<title>Whether App</title>
+	<style>
+		*{
+			position: relative;
+		}
+		body{
+			margin: 0;
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			justify-content: center;
+			width: 100%;
+			height: 100%;
+			background: #7B7B7F;
+			font-family: Arial,verdana;
+		}
+		.case{
+			min-width: 250px;
+			min-height: 400px;
+			max-width: auto;
+			max-height: auto;
+			border-radius: 15px;
+			border: 2px solid white;
+			box-shadow: 2px 2px 10px #D0D0D6;
+			background-image: linear-gradient(180deg,#ECD9B7 50%,#A9E0FC);
+			margin-top: 30%;
+			overflow: hidden;
+		}
+		.city{
+			margin: 10px 6px;
+			width: 70%;
+			padding: 5px;
+			border: none;
+			border-radius: 5px;
+		}
+		.city::placeholder{
+			font-size: .8rem;
+			color: #B2B6B9;
+		}
+		.city:focus{
+			outline: none;
+		}
+		 button{
+			border-radius: 5px;
+			background: #1681E3;
+			border: none;
+		padding: 7px;
+		font-size: .7rem;
+		width: 50px;
+		transform: translateY(-2%);
+		color: white;
+		}
+		
+		.whetherData{
+			display: flex;
+			flex-direction: column;
+			align-items: center;
+			font-weight: bold;
+		}
+		h2{
+			font-size: 1.7rem;
+		}
+		.tempDisplay{
+			font-size: 1.2rem;
+		}
+		.humDisplay{
+			font-size: 1.1rem;
+		}
+		.status{
+			font-style: italic;
+			font-size: 1.5rem;
+		}
+		.whetherEmoji{
+			font-size: 6.5rem;
+			padding: 0;
+			margin: 0;
+		}
+		.loader_bg{
+			width: 100%;
+			height: 100%;
+			position: absolute;
+			top: 0;
+			background: #707075;
+			left: 0;
+			z-index: 100;
+			display: none;
+			align-items: center;
+			justify-content: center;
+		
+		}
+		.whetherForm{
+			z-index: 200;
+		}
+		.loader{
+			width: 50px;
+			height: 50px;
+			border-top: 3px solid white;
+			border-left: 3px solid white;
+			border-radius: 50%;
+			animation: load .5s 0s infinite ease-in;
+		}
+		.error{
+			color: #E50000;
+		}
+		@keyframes load{
+			from{
+				transform: rotateZ(0deg);
+			}to{
+				transform: rotateZ(360deg);
+			}
+		}
+	</style>
+</head>
+<body>
+	
+	
+	<fieldset class="case">
+		<div class="loader_bg">
+			<div class="loader"></div>
+		</div>
+		<form action="" class="whetherForm">
+			<input focus type="text" placeholder="enter city name" class="city"><button onclick="findWhether()" type="submit">search</button>
+		</form>
+		
+		<div class="whetherData">
+			
+			<h2>city name</h2>
+			<p class="tempDisplay">temp: 100 °C</p>
+			<p class="humDisplay">humidity: 50%</p>
+			<p class="status">status: clear sky</p>
+			<p class="whetherEmoji">☁️</p>
+			<p class="error" style="display: none">some errors here</p>
+		</div>
+		
+		
+	</fieldset>
+	
+	<script>
+		
+		let form = document.querySelector('.whetherForm')
+		let error = document.querySelector('.error');
+	  let tempDisplay = document.querySelector('.tempDisplay');
+	  let humDisplay = document.querySelector('.humDisplay');
+	  let status = document.querySelector('.status');
+	  let whetherEmoji = document.querySelector('.whetherEmoji');
+		let cityName = document.querySelector('h2');
+	
+	
+	
+	   function load(state) {
+	   	if(state){
+	   		document.querySelector('.loader_bg').style.display = 'flex';
+	   	}
+	   	else{
+        document.querySelector('.loader_bg').style.display = 'none';
+    }
+}
+
+
+			form.addEventListener('submit', (eve) => {
+				eve.preventDefault();
+			document.querySelector('.city').blur();
+			})
+			
+			async function findWhether(){
+				load(true)
+				let city = document.querySelector('.city').value;
+				city = city.trim();
+		  //  http://api.openweathermap.org/data/2.5/weather?q=London,uk&APPID=8f13676ea60c553dea4564837c2259a5
+try{
+	if(city !== ''){
+		  	
+		  		
+				  error.style.display = 'none'
+					let reqeust = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&APPID=7a472771ba701a97fff2c25f0f8b016f`);
+			
+					if(reqeust.ok){
+						let data = await reqeust.json();
+						updateWhether(data);
+						load(false)
+					}else{
+					throw new Error('city not found')
+					}
+					
+	} else{
+		throw new Error('cannot search empty city')
+	}
+
+}
+catch (er) {
+					error.style.display = 'block'
+					error.textContent = er;
+					load(false)
+				}
+				
+};
+		
+		
+		
+		
+function updateWhether(data) {
+    let { name, main: { humidity, temp }, weather: [{ id,description}] } = data;
+    cityName.textContent = name;
+    tempDisplay.textContent = `temp: ${(temp - 273.15).toFixed(1)} °C`; // Changed main.temp to temp
+    humDisplay.textContent = `humidity: ${humidity} %`; // Changed main.humidity to humidity
+    whetherEmoji.textContent = getEmoji(id);
+    status.textContent = description
+}
+
+function getEmoji(id){
+   if(id >= 200 && id < 300){
+   	return "🌩️"; 
+   } else if(id >= 300 && id < 500){
+   	return "🌥️"; 
+   } else if(id >= 500 && id < 600){
+   	return "🌧️"; 
+   } else if(id >= 600 && id <= 700){
+   	return "❄️"
+   } else if(id > 700 && id < 800){
+   	return "🌫️"; 
+   } else if(id === 800){
+   	return "🌅"; 
+   } else if(id > 800 && id < 805){
+   	return "☁️"; 
+   } else{
+   	return "❓"; 
+   }
+}
+
+
+
+	</script>
+	
+	
+	<script>
+	
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/service-worker.js')
+        .then(registration => {
+          console.log('Service Worker registered:', registration);
+        })
+        .catch(error => {
+          console.error('Service Worker registration failed:', error);
+        });
+    });
+  }
+  
+  
+</script>
+
+	
+</body>
+</html>
